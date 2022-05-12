@@ -4,17 +4,9 @@ import (
   "fmt"
   "log"
   "net/http"
+
   "github.com/gorilla/websocket"
 )
-
-type Player struct {
-  Name string
-}
-
-type Game struct {
-  White Player
-  Black Player
-}
 
 var upgrader = websocket.Upgrader{
   CheckOrigin: func(r *http.Request) bool {
