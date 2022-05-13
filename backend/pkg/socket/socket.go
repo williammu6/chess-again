@@ -9,19 +9,6 @@ import (
 	g "github.com/williammu6/chess-again/backend/pkg/game"
 )
 
-type MessageType int64
-
-const (
-  GameStart MessageType = iota
-  GameFinish
-  Move
-)
-
-type MessageEnvelope struct { 
-  Type MessageType
-  Message interface{}
-}
-
 var playersInQueue []g.Player
 var games []*g.Game
 
