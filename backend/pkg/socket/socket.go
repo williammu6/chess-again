@@ -1,12 +1,26 @@
-package server
+package socket
 
 import (
   "fmt"
   "log"
 	"net/http"
 	"github.com/gorilla/websocket"
+  "encoding/json"
 	g "github.com/williammu6/chess-again/backend/pkg/game"
 )
+
+type MessageType int64
+
+const (
+  GameStart MessageType = iota
+  GameFinish
+  Move
+)
+
+type MessageEnvelope struct { 
+  Type MessageType
+  Message interface{}
+}
 
 var playersInQueue []g.Player
 var games []*g.Game
@@ -30,11 +44,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request, username string) {
     Connection: conn,
   }
 
-  fmt.Println(newPlayer)
-
   playersInQueue = append(playersInQueue, newPlayer)
-
-  fmt.Println(len(playersInQueue))
 
   if len(playersInQueue) % 2 == 0 {
     NewGame(playersInQueue[len(playersInQueue)-2], newPlayer)
@@ -43,7 +53,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request, username string) {
   HandleMessages(conn)
 }
 
-func NewGame(player1 g.Player, player2 g.Player) *g.Game {
+func NewGame(player1 g.Player, player2 g.Player) {
   newGame := &g.Game{
     White: player1,
     Black: player2,
@@ -51,14 +61,23 @@ func NewGame(player1 g.Player, player2 g.Player) *g.Game {
   playersInQueue = playersInQueue[:len(playersInQueue)-2]
   games = append(games, newGame)
 
-  SendMessage(player1.Connection, player2.Username)
-  SendMessage(player2.Connection, player1.Username)
-  fmt.Println("New game yay")
-  return newGame
+  message := MessageEnvelope{
+    Type: GameStart,
+    Message: newGame,
+  }
+
+  BroadcastMessageGame(newGame, message)
 }
 
-func SendMessage(conn *websocket.Conn, message string) {
-  err := conn.WriteMessage(websocket.TextMessage, []byte(message))
+func BroadcastMessageGame(game *g.Game, message interface{}) {
+  jsonMessage, _ := json.Marshal(message)
+  stringMessage := string(jsonMessage)
+  SendMessage(game.White, stringMessage)
+  SendMessage(game.Black, stringMessage)
+}
+
+func SendMessage(player g.Player, message string) {
+  err := player.Connection.WriteMessage(websocket.TextMessage, []byte(message))
   if err != nil {
     fmt.Println("Error during message writing:", err)
   }

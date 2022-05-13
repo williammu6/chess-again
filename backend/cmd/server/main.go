@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-  s "github.com/williammu6/chess-again/backend/pkg/server"
+  s "github.com/williammu6/chess-again/backend/pkg/socket"
 )
 
 func playHandler(w http.ResponseWriter, r *http.Request) {
