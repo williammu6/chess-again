@@ -6,4 +6,4 @@
 [] send messages
 [] receive game messages and broadcast to listeners
 [] more complex matchmaking
-[] chess logic? validate moves?
+[] chess logic validate moves?
