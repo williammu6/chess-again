@@ -1,18 +1,29 @@
 import { Flex } from "@chakra-ui/react";
+import { useDrop } from "react-dnd";
 import { Side } from ".";
-
-type Position = {
-  x: number;
-  y: number;
-};
+import { Position } from "../../types/position";
+import Piece from "./Piece";
 
 interface TileProps {
   position: Position;
-  tile: string;
+  piece: string;
   side: Side;
 }
 
-const Tile = ({ side, tile, position }: TileProps) => {
+const Tile = ({ side, piece, position }: TileProps) => {
+  const [{ background }, drop] = useDrop(() => ({
+    accept: "piece",
+    collect: (monitor) => ({
+      background: monitor.isOver() ? "gray" : null,
+    }),
+    canDrop: (item, monitor) => {
+      return true;
+    },
+    drop: (item) => {
+      console.log(item, `dropped on [${position.x}, ${position.y}]`);
+    },
+  }));
+
   const darkTile =
     (position.y % 2 == 0 && position.x % 2 == 0) ||
     (position.y % 2 == 1 && position.x % 2 == 1);
@@ -20,32 +31,34 @@ const Tile = ({ side, tile, position }: TileProps) => {
 
   return (
     <Flex
+      ref={drop}
       fontSize={"8vh"}
       width={"12vh"}
       height={"12vh"}
-      backgroundColor={backgroundColor}
+      backgroundColor={background || backgroundColor}
       alignItems="center"
       justifyContent="center"
       key={`${position.x}${position.y}`}
+      userSelect="none"
     >
-      {tile != "x" ? tile : null}
+      {piece !== "x" && <Piece piece={piece} />}
     </Flex>
   );
 };
 
 export default function Tiles({
   side,
-  tiles,
+  pieces,
   y,
 }: {
   side: Side;
-  tiles: string[];
+  pieces: string[];
   y: number;
 }) {
   return (
     <>
-      {tiles.map((tile, x: number) => (
-        <Tile key={`tile${x}`} side={side} tile={tile} position={{ x, y }} />
+      {pieces.map((piece, x: number) => (
+        <Tile key={`tile${x}`} side={side} piece={piece} position={{ x, y }} />
       ))}
     </>
   );

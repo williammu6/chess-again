@@ -1,26 +1,28 @@
 import { Flex } from "@chakra-ui/react";
-import { IPlayer, Side } from ".";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { Side } from ".";
 import Tiles from "./Tile";
 
 const STARTING_POSITION = [
-  "RNBQKBNR",
-  "PPPPPPPP",
-  "8",
-  "8",
-  "8",
-  "8",
-  "pppppppp",
   "rnbqkbnr",
+  "pppppppp",
+  "8",
+  "8",
+  "8",
+  "8",
+  "PPPPPPPP",
+  "RNBQKBNR",
 ];
 
-const getTiles = (row: string): string[] => {
+const getPieces = (row: string): string[] => {
   const rowFen: string[] = Array.from(row);
 
-  return rowFen.reduce((tiles, fen) => {
+  return rowFen.reduce((pieces, fen) => {
     if (parseInt(fen)) {
-      return [...tiles, ...Array.from("x".repeat(parseInt(fen)))];
+      return [...pieces, ...Array.from("x".repeat(parseInt(fen)))];
     }
-    return [...tiles, fen];
+    return [...pieces, fen];
   }, [] as string[]);
 };
 
@@ -28,16 +30,16 @@ export default function Board({ side }: { side: Side }) {
   if (side == "black") STARTING_POSITION.reverse();
 
   return (
-    <>
+    <DndProvider backend={HTML5Backend}>
       {STARTING_POSITION.map((row, index) => {
-        const tiles = getTiles(row);
+        const pieces = getPieces(row);
 
         return (
           <Flex key={`row${index}`}>
-            <Tiles tiles={tiles} y={index} side={side} />
+            <Tiles pieces={pieces} y={index} side={side} />
           </Flex>
         );
       })}
-    </>
+    </DndProvider>
   );
 }

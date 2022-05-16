@@ -9,9 +9,7 @@ import (
 )
 
 func playHandler(w http.ResponseWriter, r *http.Request) {
-  username := r.URL.Query().Get("username")
-  fmt.Println(username, "Connected")
-  s.HandleConnection(w, r, username)
+  s.HandleNewConnection(w, r)
 }
 
 func main() {

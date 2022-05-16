@@ -1,5 +1,5 @@
 import Board from "../../components/Game/Board";
 
 export default function B() {
-  return <Board side="white" />;
+  return <Board side="black" />;
 }

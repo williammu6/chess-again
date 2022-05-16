@@ -18,13 +18,16 @@ var upgrader = websocket.Upgrader{
   },
 }
 
-func HandleConnection(w http.ResponseWriter, r *http.Request, username string) {
+func HandleNewConnection(w http.ResponseWriter, r *http.Request) {
   conn, err := upgrader.Upgrade(w, r, nil)
 
   if err != nil {
     log.Print("Error during connection upgradation:", err)
     return
   }
+
+  username := r.URL.Query().Get("username")
+  fmt.Println(username, "Connected")
 
   newPlayer := g.Player {
     Username: username,
