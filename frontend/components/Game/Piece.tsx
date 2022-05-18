@@ -1,5 +1,7 @@
 import { Flex } from "@chakra-ui/react";
 import { DragSourceMonitor, useDrag } from "react-dnd";
+import { PieceInterface, PieceType } from "../../types/piece";
+import { Position } from "../../types/position";
 
 const pieces: { [x: string]: string } = {
   K: "♔",
@@ -13,28 +15,29 @@ const pieces: { [x: string]: string } = {
   r: "♜",
   b: "♝",
   n: "♞",
-  p: "♟",
+  p: "♟"
 };
 
 interface PieceProps {
-  piece: string;
+  piece: PieceInterface;
+  position: Position;
 }
 
-export default function Piece({ piece }: PieceProps) {
+export default function Piece({ piece, position }: PieceProps) {
   const [{ opacity }, dragRef] = useDrag(
     () => ({
       type: "piece",
-      item: { piece },
+      item: { piece, position },
       collect: (monitor: DragSourceMonitor) => ({
-        opacity: monitor.isDragging() ? 0.5 : 1,
-      }),
+        opacity: monitor.isDragging() ? 0.5 : 1
+      })
     }),
     []
   );
 
   return (
     <Flex ref={dragRef} opacity={opacity}>
-      {pieces[piece]}
+      {pieces[piece.pieceLetter]}
     </Flex>
   );
 }

@@ -1,32 +1,50 @@
 import { Flex } from "@chakra-ui/react";
-import { useDrop } from "react-dnd";
+import { DragObjectFactory, useDrop } from "react-dnd";
 import { Side } from ".";
+import { PieceInterface, PieceType } from "../../types/piece";
 import { Position } from "../../types/position";
 import Piece from "./Piece";
 
 interface TileProps {
   position: Position;
-  piece: string;
+  piece: PieceInterface;
   side: Side;
+  onMove: Function;
+  isMoveValid: Function;
 }
 
-const Tile = ({ side, piece, position }: TileProps) => {
+export default function Tile({
+  side,
+  piece,
+  position,
+  onMove,
+  isMoveValid
+}: TileProps) {
   const [{ background }, drop] = useDrop(() => ({
     accept: "piece",
-    collect: (monitor) => ({
-      background: monitor.isOver() ? "gray" : null,
+    collect: monitor => ({
+      background: monitor.canDrop() && monitor.isOver() ? "lightgreen" : null
     }),
-    canDrop: (item, monitor) => {
+    canDrop: item => {
       return true;
+      // return isMoveValid({
+      //   piece: item.piece,
+      //   from: item.position,
+      //   to: position
+      // });
     },
-    drop: (item) => {
-      console.log(item, `dropped on [${position.x}, ${position.y}]`);
-    },
+    drop: item => {
+      onMove({
+        piece: item.piece,
+        to: position
+      });
+    }
   }));
 
   const darkTile =
     (position.y % 2 == 0 && position.x % 2 == 0) ||
     (position.y % 2 == 1 && position.x % 2 == 1);
+
   const backgroundColor = (side == "black") === darkTile ? "brown" : "beige";
 
   return (
@@ -41,25 +59,9 @@ const Tile = ({ side, piece, position }: TileProps) => {
       key={`${position.x}${position.y}`}
       userSelect="none"
     >
-      {piece !== "x" && <Piece piece={piece} />}
+      {piece && piece.type != PieceType.NULL && (
+        <Piece piece={piece} position={position} />
+      )}
     </Flex>
-  );
-};
-
-export default function Tiles({
-  side,
-  pieces,
-  y,
-}: {
-  side: Side;
-  pieces: string[];
-  y: number;
-}) {
-  return (
-    <>
-      {pieces.map((piece, x: number) => (
-        <Tile key={`tile${x}`} side={side} piece={piece} position={{ x, y }} />
-      ))}
-    </>
   );
 }
