@@ -1,4 +1,5 @@
 import { Flex } from "@chakra-ui/react";
+import { useState } from "react";
 import { DragObjectFactory, useDrop } from "react-dnd";
 import { Side } from ".";
 import { PieceInterface, PieceType } from "../../types/piece";
@@ -11,6 +12,7 @@ interface TileProps {
   side: Side;
   onMove: Function;
   isMoveValid: Function;
+  canMove(piece: PieceInterface): boolean;
 }
 
 export default function Tile({
@@ -18,24 +20,23 @@ export default function Tile({
   piece,
   position,
   onMove,
-  isMoveValid
+  isMoveValid,
+  canMove
 }: TileProps) {
-  const [{ background }, drop] = useDrop(() => ({
+  const [{ background }, drop] = useDrop<PieceInterface>(() => ({
     accept: "piece",
     collect: monitor => ({
       background: monitor.canDrop() && monitor.isOver() ? "lightgreen" : null
     }),
-    canDrop: item => {
-      return true;
-      // return isMoveValid({
-      //   piece: item.piece,
-      //   from: item.position,
-      //   to: position
-      // });
+    canDrop: (piece, monitor) => {
+      return isMoveValid({
+        piece: piece,
+        to: position
+      });
     },
-    drop: item => {
+    drop: piece => {
       onMove({
-        piece: item.piece,
+        piece: piece,
         to: position
       });
     }
@@ -45,23 +46,23 @@ export default function Tile({
     (position.y % 2 == 0 && position.x % 2 == 0) ||
     (position.y % 2 == 1 && position.x % 2 == 1);
 
-  const backgroundColor = (side == "black") === darkTile ? "brown" : "beige";
+  const backgroundColor = (side == "black") === darkTile ? "gray" : "beige";
 
   return (
     <Flex
       ref={drop}
       fontSize={"8vh"}
-      width={"12vh"}
-      height={"12vh"}
+      width={"10vh"}
+      height={"10vh"}
       backgroundColor={background || backgroundColor}
       alignItems="center"
       justifyContent="center"
       key={`${position.x}${position.y}`}
       userSelect="none"
     >
-      {piece && piece.type != PieceType.NULL && (
-        <Piece piece={piece} position={position} />
-      )}
+      {piece && piece.type != PieceType.NULL ? (
+        <Piece piece={piece} canMove={canMove} />
+      ) : null}
     </Flex>
   );
 }

@@ -12,8 +12,10 @@ export enum PieceType {
 }
 
 export interface PieceInterface {
+  ID: string;
   type: PieceType;
   side: Side;
+  color: Side;
   position: Position;
   firstMove: boolean;
   pieceLetter: string;

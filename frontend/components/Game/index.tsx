@@ -1,14 +1,12 @@
-import { Flex } from "@chakra-ui/react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
-import { GameContext, GameProvider, useGame } from "../../contexts/game";
-import { BoardPieces, GamePosition, Position } from "../../types/position";
-import { getNewPosition, isMoveValid } from "./logic";
+import { BoardPieces, FenGamePosition, Position } from "../../types/position";
+import { isMoveValid } from "./logic";
 import Board from "./Board";
-import Tile from "./Tile";
 import { PieceInterface, PieceType } from "../../types/piece";
+import dynamic from "next/dynamic";
 
 export type Side = "black" | "white";
 
@@ -50,16 +48,18 @@ const pieceTypeByLetter = (pieceLetter: string): PieceType | null => {
   }
 };
 
-const buildBoard = (gamePosition: GamePosition, side: Side): BoardPieces => {
+const buildBoard = (gamePosition: FenGamePosition, side: Side): BoardPieces => {
   return gamePosition.map((row: string, y: number) => {
     const pieceLetters = Array.from(row);
 
     return pieceLetters.map(
       (pieceLetter, x) =>
         ({
+          ID: `${x}${y}`,
           type: pieceTypeByLetter(pieceLetter),
           pieceLetter,
           position: { x, y },
+          color: pieceLetter.toUpperCase() == pieceLetter ? "white" : "black",
           side
         } as PieceInterface)
     );
@@ -70,15 +70,22 @@ interface GameProps {
   player: IPlayer;
 }
 
-export default function Game({ player }: GameProps) {
+const Game = ({ player }: GameProps) => {
+  const [turn, setTurn] = useState<Side>("white");
   const [boardPieces, setBoardPieces] = useState<BoardPieces>(() => {
-    if (player.side == "black") STARTING_POSITION_FEN.reverse();
     return buildBoard(STARTING_POSITION_FEN, player.side);
   });
 
+  useEffect(() => {
+    setBoardPieces(currentBoardPieces => {
+      if (player.side == "black") currentBoardPieces.reverse();
+      return currentBoardPieces;
+    });
+  }, []);
+
   const onMove = ({ piece, to }: { piece: PieceInterface; to: Position }) => {
-    console.log(piece, to);
     setBoardPieces(previousBoardPieces => {
+      setTurn(previousTurn => (previousTurn == "white" ? "black" : "white"));
       const newBoardPieces = [...previousBoardPieces];
       const pieceMoved = { ...piece, position: to };
 
@@ -89,24 +96,35 @@ export default function Game({ player }: GameProps) {
     });
   };
 
-  const validMove = (move: { piece: string; from: Position; to: Position }) => {
-    return true;
-    // return isMoveValid({
-    //   gamePosition,
-    //   ...move
-    // });
+  const validMove = (move: {
+    piece: PieceInterface;
+    to: Position;
+  }): boolean => {
+    return (
+      move.piece.color == turn &&
+      isMoveValid({
+        boardPieces,
+        ...move
+      })
+    );
+  };
+
+  const canMove = (piece: PieceInterface) => {
+    return piece.color == turn;
   };
 
   return (
     <DndProvider backend={HTML5Backend}>
-      {boardPieces && (
-        <Board
-          boardPieces={boardPieces}
-          side={player.side}
-          onMove={onMove}
-          isMoveValid={validMove}
-        />
-      )}
+      <Board
+        key={turn}
+        boardPieces={boardPieces}
+        side={player.side}
+        onMove={onMove}
+        isMoveValid={validMove}
+        canMove={canMove}
+      />
     </DndProvider>
   );
-}
+};
+
+export default Game;

@@ -1,47 +1,30 @@
 import { PieceInterface, PieceType } from "../../types/piece";
-import { Position } from "../../types/position";
+import { BoardPieces, Position } from "../../types/position";
 
-export const getNewPosition = ({
-  previousGamePosition,
-  piece,
-  to
-}: {
-  previousGamePosition: GamePosition;
-  piece: PieceInterface;
-  to: Position;
-}) => {
-  const { x: prevX, y: prevY } = piece.position;
-  const { x: newX, y: newY } = to;
+export const getPieceAtPosition = (
+  boardPieces: BoardPieces,
+  { x, y }: Position
+): PieceInterface => {
+  return boardPieces[y][x];
+};
 
-  let currentGamePosition = [...previousGamePosition];
-
-  currentGamePosition[prevY] =
-    currentGamePosition[prevY].substring(0, prevX) +
-    "x" +
-    currentGamePosition[prevY].substring(prevX + 1);
-
-  currentGamePosition[newY] =
-    currentGamePosition[newY].substring(0, newX) +
-    piece +
-    currentGamePosition[newY].substring(newX + 1);
-
-  return currentGamePosition;
+export const isPositionEmpty = (piece: PieceInterface): boolean => {
+  return piece.type == PieceType.NULL;
 };
 
 export const isMoveValid = ({
-  gamePosition,
+  boardPieces,
   piece,
-  from,
   to
 }: {
-  gamePosition: GamePosition;
+  boardPieces: BoardPieces;
   piece: PieceInterface;
-  from: Position;
   to: Position;
 }) => {
+  const pieceAtPosition = getPieceAtPosition(boardPieces, to);
   switch (piece.type) {
     case PieceType.PAWN:
-      return from.y - to.y <= 2;
+      return piece.position.y - to.y <= 2 && isPositionEmpty(pieceAtPosition);
     default:
       return true;
   }
